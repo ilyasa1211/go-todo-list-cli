@@ -1,27 +1,76 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
+	"bufio"
+	"encoding/csv"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "update [id] [title] [description]",
+	Short: "Update a todo by ID",
+	Long:  `Update a todo by ID`,
+	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("update called")
+		id := args[0]
+		title := args[1]
+		desc := ""
+		hasDesc := len(args) > 2
+
+		if hasDesc {
+			desc = args[2]
+		}
+
+		filename := "data/data.csv"
+
+		f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
+
+		if err != nil {
+			log.Fatalln("error opening file: ", err)
+		}
+
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+
+		var newData [][]string
+
+		for scanner.Scan() {
+			row := scanner.Text()
+
+			if strings.HasPrefix(row, id) {
+				oldData := strings.Split(row, ",")
+				if !hasDesc {
+					desc = oldData[2]
+				}
+				newData = append(newData, []string{oldData[0], title, desc})
+				continue
+			}
+
+			newData = append(newData, strings.Split(row, ","))
+		}
+
+		f, err = os.OpenFile(filename, os.O_TRUNC|os.O_WRONLY, 0644)
+
+		if err != nil {
+			log.Fatalln("error opening file", err)
+		}
+
+		defer f.Close()
+
+		w := csv.NewWriter(f)
+
+		w.WriteAll(newData)
+		w.Flush()
+
 	},
 }
 

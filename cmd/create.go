@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -19,7 +20,7 @@ var createCmd = &cobra.Command{
 	Long:  `Create a todo`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		f, err := os.OpenFile("data/data.csv", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		f, err := os.OpenFile("data/data.csv", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 
 		if err != nil {
 			log.Fatalln("Error occured when opening file: ", err)
@@ -35,8 +36,22 @@ var createCmd = &cobra.Command{
 		}
 
 		w := csv.NewWriter(f)
+		r := csv.NewReader(f)
 
-		w.Write([]string{title, description})
+		records, err := r.ReadAll()
+		var lastId int
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if len(records) > 0 {
+			if lastId, err = strconv.Atoi(records[len(records)-1][0]); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		w.Write([]string{strconv.Itoa(lastId + 1), title, description})
 		w.Flush()
 
 		fmt.Println("create called")

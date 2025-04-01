@@ -6,9 +6,9 @@ You can tell just by the name what this repository is about. Also it's the most 
 
 - create todo
 - list todo
-- show todo (progress)
-- updated todo (progress)
-- delete todo (progress)
+- show todo 
+- updated todo 
+- delete todo 
 
 ## Installing
 
